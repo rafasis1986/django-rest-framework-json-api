@@ -500,9 +500,15 @@ class JSONRenderer(renderers.JSONRenderer):
             resource_name = utils.get_resource_type_from_instance(resource_instance)
         resource_data = [
             ('type', resource_name),
-            ('id', encoding.force_text(resource_instance.pk) if resource_instance else None),
             ('attributes', cls.extract_attributes(fields, resource)),
         ]
+        # expands the conditions for those cases where render was called by a serializer with a custom model
+        if not resource_instance: 
+            resource_data.append(('id', None))
+        elif type(resource_instance) is dict:
+            resource_data.append(('id', resource_instance.get('pk')))
+        else:
+            resource_data.append(('id', encoding.force_text(resource_instance.pk)))
         relationships = cls.extract_relationships(fields, resource, resource_instance)
         if relationships:
             resource_data.append(('relationships', relationships))
